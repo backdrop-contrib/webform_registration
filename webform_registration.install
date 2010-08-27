@@ -1,0 +1,93 @@
+<?php
+// $Id$
+/**
+ * @file
+ *   Webform_registration module install/schema hooks.
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function webform_registration_schema() {
+  $schema = array();
+
+  $schema['webform_registration'] = array(
+    'description' => 'Table for storing user registration fields for webform nodes.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The node identifier of a webform',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'enabled' => array(
+        'description' => 'Boolean value for whether the form should generate users.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'description' => 'Source field for the username. References to a component in that particular webform',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'mail' => array(
+        'description' => 'Source field for the user\'s email. References to a component in that particular webform',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'mail_confirm' => array(
+        'description' => 'Source field for the user\'s email confirmation. References to a component in that particular webform',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'pass' => array(
+        'description' => 'Source field for the user\'s password. Reference to a component in that particular webform',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'pass_confirm' => array(
+        'description' => 'Source field for the user\'s password. Reference to a component in that particular webform',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'theme_override' => array(
+        'description' => 'Boolean value for whether page-registration.tpl.php should be used instead of page.tpl.php.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('nid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function webform_registration_install() {
+  // db_query("UPDATE {system} SET weight = -1 WHERE name='webform_registration' AND type='module'");
+  drupal_install_schema('webform_registration');
+  drupal_set_message(t('Webform Registration module is now installed.'));
+  drupal_set_message(t('Don\'t forget to configure the !permissions for this module.', array('!permissions' => l('Permissions', 'admin/user/permissions', array('fragment' => 'module-webform_registration')))));
+}
+
+
+/**
+ * QA Fix.
+ * @return unknown_type
+ */
+function webform_registration_update_6000 () {
+  drupal_install_schema('webform_registration');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function webform_registration_uninstall() {
+  // Drop tables.
+  drupal_uninstall_schema('webform_registration');
+}

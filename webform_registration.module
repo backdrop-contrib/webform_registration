@@ -1,0 +1,306 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Webform Registration Module
+ *
+ * Allows Webform module to generate users.
+ */
+// User facing functions
+module_load_include('inc', 'webform_registration');
+
+/**
+ * Implementation of hook_menu().
+ */
+function webform_registration_menu() {
+  $items = array();
+  $items['admin/settings/webform_registration'] = array(
+    'title' => 'Webform Registration Settings',
+    'description' => 'Set module wide settings for webform registration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('webform_registration_admin'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'webform_registration.admin.inc'
+   );
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function webform_registration_perm() {
+  return array(
+    //'administer webform registration', // To be included when we have module-specific settings.
+    'enable webform registration',
+  );
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ * Alters the webform_node_form. This is admin only, not user facing.
+ */
+function webform_registration_form_webform_node_form_alter(&$form, &$form_state) {
+  if (!user_access('enable webform registration')) {
+    return;
+  }
+
+  $nid = (isset($form['nid']['#value']) ? $form['nid']['#value'] : NULL);
+  $form_settings = _webform_registration_get_settings($nid);
+
+  $form['webform_registration'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#title' => t('Webform Registration Settings'),
+    '#weight' => -1,
+    '#tree' => TRUE,
+  );
+  $form['webform_registration']['nid'] = array(
+    '#type' => 'value',
+    '#default_value' => $form_settings['nid'],
+  );
+  $form['webform_registration']['enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow users to register using this webform'),
+    '#default_value' => ($form_settings['enabled'] ? TRUE : FALSE),
+    '#description' => t('Fields selected below will become required when the webform is rendered'),
+  );
+
+  // Now let's see if we have components to draw from.
+  $components = $form['webform']['components']['#value'];
+
+  if (empty($components)) {
+    $form['webform_registration']['enabled']['#value'] = FALSE;
+    $form['webform_registration']['enabled']['#disabled'] = TRUE;
+    $form['webform_registration']['enabled']['#description'] = t('After adding components to this form any textfield, select, or hidden form element may be used to create users');
+
+    // Let's prepare some instructions for the users.
+    if ($nid) {
+      $str_instructions = t('You must first !add_components. Then you can enable Webform Registration for this webform', array('!add_components' => l('Add  Components', 'node/' . $nid . '/edit/components')));
+    }
+    else {
+      $str_instructions = t('You must save this webform and add components to it. Then you can enable Webform Registration for this webform');
+    }
+    $form['webform_registration']['instructions'] = array(
+      '#type' => 'item',
+      '#title' => 'No available components',
+      '#description' => $str_instructions,
+    );
+    return $form;
+  }
+
+  // We do have components in this form, so let's process them into select options.
+  $options = array();
+  $fieldset = array(); // Holds form_key references to map pid to fieldset cids.
+  $auto = array('<auto>' => 'Generate field automatically');
+  $none = array('<none>' => 'Omit field');
+
+  foreach ($components as $component) {
+    // Available options are nid, cid, form_key, name, type, value, extra,
+    // mandatory, email, pid, weight, page_num
+    if ($component['type'] == 'fieldset') {
+      $fieldset[$component['cid']] = array('name' => $component['name'], 'form_key' => $component['form_key']);
+      $options[$component['name']] = array();
+    }
+    elseif ($component['pid'] != 0) {
+      $options[$fieldset[$component['pid']]['name']][$fieldset[$component['pid']]['form_key'] . '][' . $component['form_key']] = $component['name'];
+    }
+    else {
+      $options[$component['form_key']] = $component['name'];
+    }
+  }
+
+  $form['webform_registration']['name'] = array(
+    '#type' => 'select',
+    '#title' => t('Username field'),
+    '#description' => t('Select the field on this webform that will be used
+      for the username.'),
+    '#default_value' => $form_settings['name'],
+    '#options' => $options,
+    // @ToDo: Optionally implement automatic username generation.
+  );
+  $form['webform_registration']['pass'] = array(
+    '#type' => 'select',
+    '#title' => t('Password field'),
+    '#description' => t('Select the field on this webform that will be used
+      for the user\'s password. Select &lt;auto&gt; to have Drupal generate a
+      random password. This field will be altered in the webform to hide the text entered where applicable.'),
+    '#default_value' => $form_settings['pass'],
+    '#options' => $auto + $options,
+  );
+  $form['webform_registration']['pass_confirm'] = array(
+    '#type' => 'select',
+    '#title' => t('Password Confirmation field'),
+    '#default_value' => $form_settings['pass_confirm'],
+    '#options' => $none + $options,
+    '#description' => t('Selecting the same field selected above renders a second verification only dummy field. Select &lt;none&gt; to show only one email field.'),
+  );
+  $form['webform_registration']['mail'] = array(
+    '#type' => 'select',
+    '#title' => t('Email Address field'),
+    '#default_value' => $form_settings['mail'],
+    '#options' => $options,
+    '#description' => t('Select the field on this webform that will be used for the user\'s email.'),
+  );
+  $form['webform_registration']['mail_confirm'] = array(
+    '#type' => 'select',
+    '#title' => t('Email Confirmation field'),
+    '#default_value' => $form_settings['mail_confirm'],
+    '#options' => $none + $options,
+    '#description' => t('Selecting the same field selected above renders a second verification only dummy field. Select &lt;none&gt; to show only one email field.'),
+  );
+
+  $form['webform_registration']['theme_override'] = array(
+    '#type' => 'select',
+    '#title' => t('Override Page Template'),
+    '#default_value' => $form_settings['theme_override'],
+    '#options' => array(FALSE => t('Disabled'), TRUE => t('Enabled')),
+    '#description' => t('Select %enabled to use page-registration.tpl.php instead of page.tpl.php', array('%enabled' => t('Enabled'))),
+  );
+
+  // Move
+  if (module_exists('bp_eloqua')) {
+    $webform_registration = $form['webform_registration'];
+    unset($form['webform_registration']);
+    $form['eloqua']['webform_registration'] = $webform_registration;
+  }
+
+  // This values get processed using hook_nodeapi() so we don't need a submit or validate function.
+  $form['#validate'][] = 'webform_registration_edit_form_validate';
+  $form['buttons']['submit']['#submit'][] = 'webform_registration_edit_form_submit';
+}
+
+/**
+ * Admin form validate handler
+ */
+function webform_registration_edit_form_validate($form, &$form_state) {
+  // Get only the portion of the form that we care about.
+  $form_values = $form_state['values']['webform_registration'];
+}
+
+/**
+ * Admin form submit handler
+ */
+function webform_registration_edit_form_submit($form, &$form_state) {
+  $nid = $form_state['nid'];
+  $form_values = $form_state['values']['webform_registration'];
+  if (!drupal_write_record('webform_registration', $form_values)) {
+    $res = drupal_write_record('webform_registration', $form_values, 'nid');
+  }
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function webform_registration_form_alter(&$form, &$form_state, $form_id) {
+  if (substr($form_id, 0, 19) == 'webform_client_form') {
+    webform_registration_inc_form_alter($form, $form_state, $form_id);
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi()
+ */
+function webform_registration_nodeapi(&$node, $op, $a3, $a4) {
+  if ($node->type != 'webform') {
+    return; // If it's not a webform node, skip everything,
+  }
+
+  switch ($op) {
+    case 'insert' :
+      if (isset($node->webform_registration)
+        && $node->webform_registration['nid'] !== $node->nid)
+      {
+        $form_values = $node->webform_registration;
+        $form_values['nid'] = $node->nid;
+        drupal_write_record('webform_registration', $form_values);
+      }
+      break;
+    case 'load':
+      $node->webform_registration = _webform_registration_get_settings($node->nid);
+      break;
+  }
+}
+
+/**
+ * Retrieves the settings to be used with a particular webform.
+ * If $nid is not passed, default values are returned;
+ */
+function _webform_registration_get_settings($nid = NULL) {
+  // Set some defaults for returning when there is no row defined
+  $form_settings = array(
+    'nid'             => $nid,
+    'enabled'         => FALSE,
+    'name'            => 'name',
+    'mail'            => 'mail',
+    'mail_confirm'    => 'mail_confirm',
+    'pass'            => 'pass',
+    'pass_confirm'    => 'pass_confirm',
+    'theme_override'  => 'theme_override',
+  );
+
+  $sql = "SELECT nid, enabled, name, mail, mail_confirm, pass, pass_confirm, theme_override FROM {webform_registration} WHERE nid = %d";
+  $params = array($nid);
+  $options = array(
+    ACHIEVE_DB_OPTION_RETURN_TYPE => ACHIEVE_DB_OPTION_RETURN_TYPE_ARRAY,
+  );
+  if ($nid > 0) {
+    $result = achieve_db_select($sql, $params, $options);
+    if ($result) {
+      $form_settings = $result;
+    }
+  }
+  $form_settings['uid'] = 0;
+  return $form_settings;
+}
+
+/**
+ * Implementation $modulename_preprocess_$hook().
+ */
+function webform_registration_preprocess_page(&$variables) {
+  $node = $variables['node'];
+  // Temp fix to error messages not being shown;
+  $variables['temp_messages'] = $variables['messages'];
+
+  if ($node->type == 'webform' && $node->webform_registration['theme_override']) {
+    // Add suggestions: a node specific and a generic page-registration.tpl.php
+    $variables['template_files'][] = 'page-registration';
+    $variables['template_files'][] = 'page-registration-' . $node->nid;
+  }
+}
+
+/**
+ * Implementation of hook_theme
+ */
+function webform_registration_theme($existing, $type, $theme, $path) {
+  // N2S: $path == drupal_get_path($type, $theme);
+  return array(
+    'page' => array(
+      'template' => 'page-registration',
+      'arguments' => array(
+        'content' => NULL,
+        'show_blocks' => TRUE,
+        'show_messages' => TRUE,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_clone_node_alter().
+ */
+function webform_registration_clone_node_alter(&$node, $original_node, $method) {
+  $node->webform_registration = _webform_registration_get_settings($original_node->nid);
+}
+
+/**
+ * Boolean function that checks if a given $nid is allowed to register users.
+ */
+function webform_registration_is_node_enabled($nid = NULL) {
+  if (is_numeric($nid) && $nid > 0) {
+    $settings = _webform_registration_get_settings($nid);
+    return $settings['enabled'];
+  }
+  return FALSE;
+}

@@ -1,0 +1,7 @@
+; $Id$
+name = Webform Registration
+description = Allows Webform module to generate users.
+package = "Webform"
+dependencies[] = webform
+version = "6.x-0.2"
+core = 6.x
