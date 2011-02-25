@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Webform_registration module install/schema hooks.

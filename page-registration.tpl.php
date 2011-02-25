@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Template file for displaying registration with reduced regions and no sidebars.

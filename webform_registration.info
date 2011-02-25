@@ -1,4 +1,3 @@
-; $Id$
 name = Webform Registration
 description = Allows Webform module to generate users.
 package = "Webform"
