@@ -413,8 +413,9 @@ function _webform_registration_set_form_field($needle, &$haystack, $value) {
 /**
  * Maps user entered form values into the $form_state array where user module expects them to be.
  */
-function _webform_registration_map_registration_fields(&$form_state, $fields, $settings) {
+function _webform_registration_map_registration_fields(&$form_state, $fields) {
   $user_form = array();
+
   // Prepare fields for validation and map them out into the values
   // These are the keys that the user module expects for validation and insertion.
   if (!empty($fields['mail']['value'])) {
@@ -426,8 +427,10 @@ function _webform_registration_map_registration_fields(&$form_state, $fields, $s
   else {
     $form_state['values']['name'] = $fields['mail']['value'];
   }
+
   // If pass equals <auto> then just assign '' so that the user module can generate that for us.
   $form_state['values']['pass'] = ($fields['pass']['key'] != '<auto>' ? $fields['pass']['value'] : '');
+
   // User registrations frowns when it sees a uid key.
   $registration = array_flip(array_keys(user_register()));
   $user_form['values'] = array_intersect_key($form_state['values'], $registration);

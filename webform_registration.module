@@ -14,14 +14,14 @@ module_load_include('inc', 'webform_registration');
  */
 function webform_registration_menu() {
   $items = array();
-  $items['admin/settings/webform_registration'] = array(
-    'title' => 'Webform Registration Settings',
-    'description' => 'Set module wide settings for webform registration',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('webform_registration_admin'),
-    'access arguments' => array('access administration pages'),
-    'file' => 'webform_registration.admin.inc'
-  );
+  //  $items['admin/settings/webform_registration'] = array(
+  //    'title' => 'Webform Registration Settings',
+  //    'description' => 'Set module wide settings for webform registration',
+  //    'page callback' => 'drupal_get_form',
+  //    'page arguments' => array('webform_registration_admin'),
+  //    'access arguments' => array('access administration pages'),
+  //    'file' => 'webform_registration.admin.inc'
+  //  );
   return $items;
 }
 
@@ -67,7 +67,14 @@ function webform_registration_form_webform_node_form_alter(&$form, &$form_state)
   );
 
   // Now let's see if we have components to draw from.
-  $components = $form['webform']['components']['#value'];
+  if (isset($form['webform']['components']['#value'])) {
+    // Legacy version
+    $components = $form['webform']['components']['#value'];
+  }
+  elseif (isset($form['#node']->webform) && !empty($form['#node']->webform['components'])) {
+    // Newer versions
+    $components = $form['#node']->webform['components'];
+  }
 
   if (empty($components)) {
     $form['webform_registration']['enabled']['#value'] = FALSE;
@@ -158,13 +165,6 @@ function webform_registration_form_webform_node_form_alter(&$form, &$form_state)
     '#description' => t('Select %enabled to use page-registration.tpl.php instead of page.tpl.php', array('%enabled' => t('Enabled'))),
   );
 
-  // Move
-  if (module_exists('bp_eloqua')) {
-    $webform_registration = $form['webform_registration'];
-    unset($form['webform_registration']);
-    $form['eloqua']['webform_registration'] = $webform_registration;
-  }
-
   // This values get processed using hook_nodeapi() so we don't need a submit or validate function.
   $form['#validate'][] = 'webform_registration_edit_form_validate';
   $form['buttons']['submit']['#submit'][] = 'webform_registration_edit_form_submit';
@@ -180,13 +180,22 @@ function webform_registration_edit_form_validate($form, &$form_state) {
 
 /**
  * Admin form submit handler
+ * 
+ * @param array $form
+ * @param array $form_state
+ * @return integer SAVED_NEW or SAVED_UPDATED 
  */
 function webform_registration_edit_form_submit($form, &$form_state) {
   $nid = $form_state['nid'];
+  $existing_record = _webform_registration_get_settings($nid);
   $form_values = $form_state['values']['webform_registration'];
-  if (!drupal_write_record('webform_registration', $form_values)) {
-    $res = drupal_write_record('webform_registration', $form_values, 'nid');
+  if (!$existing_record['nid']) {
+    $result = drupal_write_record('webform_registration', $form_values);
   }
+  else {
+    $result = drupal_write_record('webform_registration', $form_values, 'nid');
+  }
+  return $result;
 }
 
 /**
@@ -225,10 +234,11 @@ function webform_registration_nodeapi(&$node, $op, $a3, $a4) {
  * Retrieves the settings to be used with a particular webform.
  * If $nid is not passed, default values are returned;
  */
-function _webform_registration_get_settings($nid = NULL) {
+function _webform_registration_get_settings($nid = 0) {
   // Set some defaults for returning when there is no row defined
   $form_settings = array(
     'nid' => $nid,
+    'uid' => 0,
     'enabled' => FALSE,
     'name' => 'name',
     'mail' => 'mail',
@@ -238,17 +248,18 @@ function _webform_registration_get_settings($nid = NULL) {
     'theme_override' => 'theme_override',
   );
 
-  $sql = "SELECT nid, enabled, name, mail, mail_confirm, pass, pass_confirm,
+  if ($nid > 0) {
+    $sql = "SELECT nid, enabled, name, mail, mail_confirm, pass, pass_confirm,
     theme_override
     FROM {webform_registration}
     WHERE nid = %d";
-  if ($nid > 0) {
-    $result = db_query($sql, $nid);
-    if ($result) {
-      $form_settings = $result;
+
+    $result = db_query_range($sql, $nid, 0, 1);
+    while ($settings = db_fetch_array($result)) {
+      $form_settings = $settings;
     }
   }
-  $form_settings['uid'] = 0;
+
   return $form_settings;
 }
 
