@@ -20,7 +20,7 @@ function webform_registration_inc_form_alter(&$form, &$form_state, $form_id) {
     return;
   }
 
-  $haystack =& $form['submitted'];
+  $haystack = & $form['submitted'];
   $fields = _webform_registration_get_fields($haystack, $settings);
 
   // Username field handling.
@@ -56,7 +56,8 @@ function webform_registration_inc_form_alter(&$form, &$form_state, $form_id) {
   // Email field handling
   if (isset($fields['mail']['field'])) {
     $fields['mail']['field']['#required'] = TRUE;
-  } else {
+  }
+  else {
     drupal_set_message(t('Field %field not found', array('%field' => $settings['mail'])), 'error');
   }
 
@@ -75,7 +76,6 @@ function webform_registration_inc_form_alter(&$form, &$form_state, $form_id) {
     // @ToDo: Implement this usecase.
   }
   // @ToDo: Optionally. Implement javascript strength notification.
-
   // The user is logged in. QUICK! HIDE!
   if (user_is_logged_in()) {
     // Hide everything but populate the fields in case webform needs them for
@@ -90,22 +90,22 @@ function webform_registration_inc_form_alter(&$form, &$form_state, $form_id) {
 
     $fields['pass_confirm']['field']['#type'] = 'value';
     $fields['pass_confirm']['field']['#value'] = '';
-    $fields['pass_confirm']['field']['#required'] = false;
+    $fields['pass_confirm']['field']['#required'] = FALSE;
 
     $fields['mail']['field']['#attributes'] = array('readonly' => 'readonly');
     $fields['mail']['field']['#value'] = $user->mail;
 
     $fields['mail_confirm']['field']['#type'] = 'value';
     $fields['mail_confirm']['field']['#value'] = $user->mail;
-    $fields['mail_confirm']['field']['#required'] = false;
+    $fields['mail_confirm']['field']['#required'] = FALSE;
 
     // @ToDo: Manage hiding fieldsets when all the fields are gone.
     // $form['#submit'][]    = 'webform_registration_submit_login_only';
     // $form['#validate'][]  = 'webform_registration_validate_login_only';
   }
   else {
-    $form['#validate'][]  = 'webform_registration_validate';
-    $form['#submit'][]    = 'webform_registration_submit';
+    $form['#validate'][] = 'webform_registration_validate';
+    $form['#submit'][] = 'webform_registration_submit';
   }
   _webform_registration_set_fields($haystack, $fields);
 
@@ -177,7 +177,6 @@ function webform_registration_validate($form, &$form_state) {
       _webform_registration_map_registration_fields($form_state, $fields, $settings);
       user_register_validate($form, $form_state);
     }
-
   }
 }
 
@@ -207,7 +206,7 @@ function webform_registration_submit($form, &$form_state) {
     $form_state['values']['name'] = $fields['name']['value'] = $user_exists['name'];
 
     $user_form = _webform_registration_map_registration_fields($form_state, $fields);
-    $user  = user_authenticate($user_form['values']);
+    $user = user_authenticate($user_form['values']);
   }
   else {
     watchdog('webform_registration', 'Webform Registration: Registration Triggered');
@@ -215,7 +214,7 @@ function webform_registration_submit($form, &$form_state) {
 
     $user_form = _webform_registration_map_registration_fields($form_state, $fields);
     $user_form['values']['notify'] = FALSE;
-   
+
     user_register_submit($form, $user_form);
 
     $form_state['redirect'] = $redirect;
@@ -227,10 +226,9 @@ function webform_registration_submit($form, &$form_state) {
   }
 }
 
-
 function webform_registration_profile(&$form_state) {
   if (user_is_anonymous()) {
-    return false;
+    return FALSE;
   }
 
   global $user;
@@ -243,7 +241,7 @@ function webform_registration_profile(&$form_state) {
     $node->title = $user->name;
 
     if (content_profile_profile_exists($node, $user->uid)) {
-      $node = node_load((array)$node);
+      $node = node_load((array) $node);
     }
     else {
       node_save($node);
@@ -260,7 +258,6 @@ function webform_registration_profile(&$form_state) {
     node_save($node);
   }
 }
-
 
 /**
  * Function that takes the values for the form, finds the email, and checks if
@@ -279,9 +276,10 @@ function _webform_registration_user_exists($fields, $check_both = FALSE) {
 /*
  * Recursively tries to find a value in nested arrays
  */
+
 function _find_in_array($needle, &$array) {
   foreach ($array as $key => $value) {
-     if (is_array($value)) {
+    if (is_array($value)) {
       if ($found = _find_in_array($needle, $value)) {
         return $found;
       }
@@ -297,7 +295,7 @@ function _find_in_array($needle, &$array) {
  * Checks if a given email exists in the name or mail columns of the users table.
  */
 function webform_registration_email_exists($string) {
-  $match    = array('match' => FALSE);
+  $match = array('match' => FALSE);
   if (!empty($string)) {
     $result = db_query("SELECT uid, name
     FROM {users}
@@ -306,8 +304,8 @@ function webform_registration_email_exists($string) {
     while ($user = db_fetch_array($result)) {
       $match = array(
         'match' => TRUE,
-        'uid'   => $user['uid'],
-        'name'  => $user['name'],
+        'uid' => $user['uid'],
+        'name' => $user['name'],
       );
     }
   }
@@ -318,7 +316,7 @@ function webform_registration_email_exists($string) {
  * Checks if a given username exists in the name or mail columns of the users table.
  */
 function webform_registration_user_exists($string) {
-  $match    = array('match' => FALSE);
+  $match = array('match' => FALSE);
   if (!empty($string)) {
     $result = db_query("SELECT uid, name
     FROM {users}
@@ -327,8 +325,8 @@ function webform_registration_user_exists($string) {
     while ($user = db_fetch_array($result)) {
       $match = array(
         'match' => TRUE,
-        'uid'   => $user['uid'],
-        'name'  => $user['name'],
+        'uid' => $user['uid'],
+        'name' => $user['name'],
       );
     }
   }
@@ -385,8 +383,8 @@ function _webform_registration_get_form_field($needle, &$haystack, $value = NULL
   $i = 0;
   foreach ($path as $item) {
     if (isset($field[$item])) {
-        $field = &$field[$item];
-        $i++;
+      $field = &$field[$item];
+      $i++;
     }
   }
 
@@ -397,9 +395,9 @@ function _webform_registration_get_form_field($needle, &$haystack, $value = NULL
   }
 
   $ret = array(
-      'key' => $needle,
-      'field' => (is_array($field) ? $field : NULL),
-      'value' => (is_array($field) ? $field['#value'] : $field),
+    'key' => $needle,
+    'field' => (is_array($field) ? $field : NULL),
+    'value' => (is_array($field) ? $field['#value'] : $field),
   );
 
   return $ret;

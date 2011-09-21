@@ -25,10 +25,10 @@
 
           <?php if ($header): ?>
             <div id="header-blocks" class="region region-header">
-                <?php print $header; ?>
+              <?php print $header; ?>
             </div> <!-- /#header-blocks -->
           <?php endif; ?>
-            
+
           <?php
           // @ToDo: Track what is removing the $messages variable.
           print $temp_messages;
@@ -38,28 +38,30 @@
             <h2><a href="<?php print $node_url ?>" title="<?php print $title ?>"><?php print $title ?></a></h2>
           <?php endif; ?>
           <div id="tabs">
-            <?php if ($tabs): print '<ul class="tabs primary">'. $tabs .'</ul>'; endif; ?>
+            <?php if ($tabs): print '<ul class="tabs primary">' . $tabs . '</ul>';
+            endif; ?>
           </div>
-          <?php if ($tabs2): print '<ul class="tabs secondary">'. $tabs2 .'</ul>'; endif; ?>
-            
+          <?php if ($tabs2): print '<ul class="tabs secondary">' . $tabs2 . '</ul>';
+          endif; ?>
+
           <?php print $content_top; ?>
-          <?php print $content ?>
-          <?php print $content_bottom; ?>
+<?php print $content ?>
+<?php print $content_bottom; ?>
 
           <div class="clear-block clear">
             <div class="meta">
               <?php if ($taxonomy): ?>
                 <div class="terms"><?php print $terms ?></div>
-              <?php endif;?>
+            <?php endif; ?>
             </div>
             <?php if ($links): ?>
               <div class="links"><?php print $links; ?></div>
-            <?php endif; ?>
+<?php endif; ?>
           </div>
           <div class="clear-block clear"></div>
         </div>
       </div> <!-- close container -->
     </div> <!-- close wrapper -->
-    <?php print $closure ?>
+<?php print $closure ?>
   </body>
 </html>

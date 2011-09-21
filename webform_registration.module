@@ -21,7 +21,7 @@ function webform_registration_menu() {
     'page arguments' => array('webform_registration_admin'),
     'access arguments' => array('access administration pages'),
     'file' => 'webform_registration.admin.inc'
-   );
+  );
   return $items;
 }
 
@@ -193,13 +193,13 @@ function webform_registration_edit_form_submit($form, &$form_state) {
  * Implementation of hook_form_alter().
  */
 function webform_registration_form_alter(&$form, &$form_state, $form_id) {
-  if (substr($form_id, 0, 19) == 'webform_client_form') {
+  if (drupal_substr($form_id, 0, 19) == 'webform_client_form') {
     webform_registration_inc_form_alter($form, $form_state, $form_id);
   }
 }
 
 /**
- * Implementation of hook_nodeapi()
+ * Implementation of hook_nodeapi()/
  */
 function webform_registration_nodeapi(&$node, $op, $a3, $a4) {
   if ($node->type != 'webform') {
@@ -209,8 +209,7 @@ function webform_registration_nodeapi(&$node, $op, $a3, $a4) {
   switch ($op) {
     case 'insert' :
       if (isset($node->webform_registration)
-        && $node->webform_registration['nid'] !== $node->nid)
-      {
+        && $node->webform_registration['nid'] !== $node->nid) {
         $form_values = $node->webform_registration;
         $form_values['nid'] = $node->nid;
         drupal_write_record('webform_registration', $form_values);
@@ -229,23 +228,22 @@ function webform_registration_nodeapi(&$node, $op, $a3, $a4) {
 function _webform_registration_get_settings($nid = NULL) {
   // Set some defaults for returning when there is no row defined
   $form_settings = array(
-    'nid'             => $nid,
-    'enabled'         => FALSE,
-    'name'            => 'name',
-    'mail'            => 'mail',
-    'mail_confirm'    => 'mail_confirm',
-    'pass'            => 'pass',
-    'pass_confirm'    => 'pass_confirm',
-    'theme_override'  => 'theme_override',
+    'nid' => $nid,
+    'enabled' => FALSE,
+    'name' => 'name',
+    'mail' => 'mail',
+    'mail_confirm' => 'mail_confirm',
+    'pass' => 'pass',
+    'pass_confirm' => 'pass_confirm',
+    'theme_override' => 'theme_override',
   );
 
-  $sql = "SELECT nid, enabled, name, mail, mail_confirm, pass, pass_confirm, theme_override FROM {webform_registration} WHERE nid = %d";
-  $params = array($nid);
-  $options = array(
-    ACHIEVE_DB_OPTION_RETURN_TYPE => ACHIEVE_DB_OPTION_RETURN_TYPE_ARRAY,
-  );
+  $sql = "SELECT nid, enabled, name, mail, mail_confirm, pass, pass_confirm,
+    theme_override
+    FROM {webform_registration}
+    WHERE nid = %d";
   if ($nid > 0) {
-    $result = achieve_db_select($sql, $params, $options);
+    $result = db_query($sql, $nid);
     if ($result) {
       $form_settings = $result;
     }
@@ -270,7 +268,7 @@ function webform_registration_preprocess_page(&$variables) {
 }
 
 /**
- * Implementation of hook_theme
+ * Implementation of hook_theme().
  */
 function webform_registration_theme($existing, $type, $theme, $path) {
   // N2S: $path == drupal_get_path($type, $theme);

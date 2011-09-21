@@ -74,15 +74,6 @@ function webform_registration_install() {
   drupal_set_message(t('Don\'t forget to configure the !permissions for this module.', array('!permissions' => l('Permissions', 'admin/user/permissions', array('fragment' => 'module-webform_registration')))));
 }
 
-
-/**
- * QA Fix.
- * @return unknown_type
- */
-function webform_registration_update_6000 () {
-  drupal_install_schema('webform_registration');
-}
-
 /**
  * Implementation of hook_uninstall().
  */
