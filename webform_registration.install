@@ -5,7 +5,7 @@
  */
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function webform_registration_schema() {
   $schema = array();
@@ -58,6 +58,24 @@ function webform_registration_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'account_fields' => array(
+        'description' => 'Serialized array of user fields containing their respective references to webform components',
+        'type' => 'text',
+      ),
+      'opt_in' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'description' => 'Source field indicating user opts in for automatic registration'
+      ),
+      'opt_in_value' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'description' => 'Source field value indicating opts in for automatic registration'
+      ),
+      'roles' => array(
+        'type' => 'text',
+        'description' => 'Serialized array of user roles to assign new user to'
+      ),
     ),
     'primary key' => array('nid'),
   );
@@ -65,19 +83,12 @@ function webform_registration_schema() {
 }
 
 /**
- * Implementation of hook_install().
+ * Add columns for opt-in and user roles.
  */
-function webform_registration_install() {
-  // db_query("UPDATE {system} SET weight = -1 WHERE name='webform_registration' AND type='module'");
-  drupal_install_schema('webform_registration');
-  drupal_set_message(t('Webform Registration module is now installed.'));
-  drupal_set_message(t('Don\'t forget to configure the !permissions for this module.', array('!permissions' => l('Permissions', 'admin/user/permissions', array('fragment' => 'module-webform_registration')))));
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function webform_registration_uninstall() {
-  // Drop tables.
-  drupal_uninstall_schema('webform_registration');
+function webform_registration_update_7101() {
+  if (!db_field_exists('webform_registration', 'opt_in')) {
+    db_add_field('webform_registration', 'opt_in', array('type' => 'varchar', 'length' => 255, 'description' => 'Source field indicating user opts in to automatic registration'));
+    db_add_field('webform_registration', 'opt_in_value', array('type' => 'varchar', 'length' => 255, 'description' => 'Source field value indicating opts in for automatic registration'));
+    db_add_field('webform_registration', 'roles', array('type' => 'text', 'description' => 'Serialized array of user roles to assign new user to'));
+  }
 }
