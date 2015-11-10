@@ -76,6 +76,11 @@ function webform_registration_schema() {
         'type' => 'text',
         'description' => 'Serialized array of user roles to assign new user to'
       ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'description' => 'Source field indicating default status for new users.',
+      ),
     ),
     'primary key' => array('nid'),
   );
@@ -90,5 +95,11 @@ function webform_registration_update_7101() {
     db_add_field('webform_registration', 'opt_in', array('type' => 'varchar', 'length' => 255, 'description' => 'Source field indicating user opts in to automatic registration'));
     db_add_field('webform_registration', 'opt_in_value', array('type' => 'varchar', 'length' => 255, 'description' => 'Source field value indicating opts in for automatic registration'));
     db_add_field('webform_registration', 'roles', array('type' => 'text', 'description' => 'Serialized array of user roles to assign new user to'));
+  }
+}
+
+function webform_registration_update_7103() {
+  if (!db_field_exists('webform_registration', 'status')) {
+    db_add_field('webform_registration', 'match_existing', array('type' => 'int', 'size' => 'tiny', 'description' => 'Source field indicating default status for new users.'));
   }
 }

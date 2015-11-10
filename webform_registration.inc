@@ -185,7 +185,7 @@ function webform_registration_submit($form, &$form_state) {
       'mail' => $fields['mail']['value'],
       'name' => $fields['name']['value'],
       'notify' => 0,
-      'status' => 1,
+      'status' => $settings['status'],
       'pass' => ($fields['pass']['key'] != '<auto>' ? $fields['pass']['value'] : user_password()),
       'roles' => $settings['roles'],
     ),
