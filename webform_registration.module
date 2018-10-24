@@ -17,7 +17,7 @@ function webform_registration_menu() {
   $items = array();
   $items['node/%webform_menu/webform/registration'] = array(
     'title' => 'Registration Settings',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('webform_registration_settings_form', 1),
     'access callback' => 'node_access',
     'access arguments' => array('update', 1),
@@ -32,7 +32,7 @@ function webform_registration_menu() {
  * Implements hook_form_alter().
  */
 function webform_registration_form_alter(&$form, &$form_state, $form_id) {
-  if (drupal_substr($form_id, 0, 19) == 'webform_client_form') {
+  if (backdrop_substr($form_id, 0, 19) == 'webform_client_form') {
     webform_registration_inc_form_alter($form, $form_state, $form_id);
   }
 }
@@ -42,12 +42,12 @@ function webform_registration_form_alter(&$form, &$form_state, $form_id) {
  */
 function webform_registration_node_insert($node) {
   if ($node->type == 'webform' && isset($node->webform_registration)
-    && $node->webform_registration['nid'] !== $node->nid) {
+     && $node->webform_registration['nid'] !== $node->nid) {
     $form_values = $node->webform_registration;
     $form_values['nid'] = $node->nid;
     $form_values['account_fields'] = serialize($form_values['account_fields']);
     $form_values['roles'] = serialize($form_values['roles']);
-    drupal_write_record('webform_registration', $form_values);
+    backdrop_write_record('webform_registration', $form_values);
   }
 }
 

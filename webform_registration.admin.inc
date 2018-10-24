@@ -6,6 +6,10 @@
  * This file holds all the webform administration functionality
  */
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function webform_registration_settings_form($form, $form_state, $node) {
 
   $components = $node->webform['components'];
@@ -85,7 +89,7 @@ function webform_registration_settings_form($form, $form_state, $node) {
     '#type' => 'select',
     '#title' => t('Password field'),
     '#description' => t('Select the field on this webform that will be used
-      for the user\'s password. Select &lt;auto&gt; to have Drupal generate a
+      for the user\'s password. Select &lt;auto&gt; to have Backdrop generate a
       random password. This field will be altered in the webform to hide the text entered where applicable.'),
     '#default_value' => $form_settings['pass'],
     '#options' => $auto + $options,
@@ -273,12 +277,12 @@ function webform_registration_settings_form_submit($form, &$form_state) {
   //Check for existing record
   $result = db_query("SELECT * FROM {webform_registration} WHERE nid = :nid", array(":nid" => $form_state['values']['node']->nid));
   if ($result->rowCount() < 1) {
-    $result = drupal_write_record('webform_registration', $form_values);
+    $result = backdrop_write_record('webform_registration', $form_values);
   }
   else {
-    $result = drupal_write_record('webform_registration', $form_values, 'nid');
+    $result = backdrop_write_record('webform_registration', $form_values, 'nid');
   }
-  drupal_set_message(t('The registration settings have been updated.'));
+  backdrop_set_message(t('The registration settings have been updated.'));
   return $result;
 }
 

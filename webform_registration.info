@@ -3,5 +3,5 @@ description = Allows Webform module to generate users.
 package = "Webform"
 dependencies[] = webform
 version = 7.x-2.0
-core = 7.x
-files[] = webform_registration.inc
+backdrop = 1.x
+type = module

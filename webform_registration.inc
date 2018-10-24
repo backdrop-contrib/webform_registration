@@ -26,7 +26,7 @@ function webform_registration_inc_form_alter(&$form, &$form_state, $form_id) {
 
   $haystack = &$form['submitted'];
   $fields = _webform_registration_get_fields($haystack, $settings);
-  
+
   // Username field handling.
   if (isset($fields['name']['field'])) {
     $fields['name']['field']['#required'] = TRUE;
@@ -99,7 +99,7 @@ function webform_registration_validate($form, &$form_state) {
   }
 
   $fields = _webform_registration_get_fields($haystack, $settings);
-  
+
   // Validate new or changing username.
   if (isset($fields['name']['value'])) {
     if ($error = user_validate_name($fields['name']['value'])) {
@@ -169,10 +169,10 @@ function webform_registration_submit($form, &$form_state) {
   if (isset($form_state['input']['submitted'])) {
     $haystack = &$form_state['input']['submitted'];
   }
-  
+
   // Retrieve the values and/or form references
   $fields = _webform_registration_get_fields($haystack, $settings);
-  
+
   // Has user has opted out of registration?
   if ($settings['opt_in'] !== '<none>' && $settings['opt_in_value'] != $haystack[$settings['opt_in']]) {
     return;
@@ -220,7 +220,7 @@ function _webform_registration_get_fields(&$haystack, $settings) {
     $settings = array_merge($settings, $settings['account_fields']);
   }
   $fields = array();
-  
+
   // Retrieve a list of the keys allowed to be fetched recursively
   $form_fields = _webform_registration_get_valid_form_fields();
   $special_needles = _webform_registration_get_special_needles();
@@ -270,7 +270,7 @@ function _webform_registration_get_form_field($needle, &$haystack, $value = NULL
   if ($value != NULL && $depth == $i) {
     $field = $value;
   }
-  
+
   $ret = array(
     'key' => $needle,
     'field' => (is_array($field) ? $field : NULL),
@@ -308,7 +308,7 @@ function _webform_registration_set_fields(&$haystack, &$fields) {
 function _webform_registration_get_valid_form_fields() {
 
   $user_field_info_instances = field_info_instances('user', 'user');
-  $valid_form_fields = drupal_map_assoc(array(
+  $valid_form_fields = backdrop_map_assoc(array(
     'name',
     'mail',
     'mail_confirm',
