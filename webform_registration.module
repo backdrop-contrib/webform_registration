@@ -91,7 +91,6 @@ function webform_registration_preprocess_page(&$variables) {
   //If we are on a node page.
   if (isset($variables['node'])) {
     $node = $variables['node'];
-
     if ($node->type == 'webform' && $node->webform_registration['theme_override']) {
       // Add suggestions: a node specific and a generic page-registration.tpl.php
       $variables['template_files'][] = 'page-registration';
@@ -103,6 +102,7 @@ function webform_registration_preprocess_page(&$variables) {
 /**
  * Implements hook_theme().
  */
+ /*
 function webform_registration_theme($existing, $type, $theme, $path) {
   return array(
     'page' => array(
@@ -115,3 +115,4 @@ function webform_registration_theme($existing, $type, $theme, $path) {
     ),
   );
 }
+*/

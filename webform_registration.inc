@@ -111,8 +111,8 @@ function webform_registration_validate($form, &$form_state) {
   }
 
   // Validate the e-mail address, and check if it is taken by an existing user.
-  if ($error = user_validate_mail($fields['mail']['value'])) {
-    form_set_error($fields['mail']['key'], $error);
+  if (!(valid_email_address($fields['mail']['value']))) {
+    form_set_error($fields['mail']['key'], t('Please enter a valid email address.'));
   }
   elseif ((bool) db_select('users')->fields('users', array('uid'))->condition('uid', $account->uid, '<>')->condition('mail', db_like($fields['mail']['value']), 'LIKE')->range(0, 1)->execute()->fetchField()) {
     // Format error message dependent on whether the user is logged in or not.
@@ -151,8 +151,8 @@ function webform_registration_upgrade_submit($form, &$form_state) {
   $roles = user_roles(TRUE);
   $all_roles = $account->roles;
   if (isset($settings['roles']) && is_array($settings['roles'])) {
-    foreach ($settings['roles'] as $rid => $value) {
-      $all_roles[$rid] = $roles[$rid];
+    foreach ($settings['roles'] as $rolename => $rolelabel) {
+      $all_roles[$rolename] = $roles[$rolename];
     }
   }
   user_save($account, array('roles' => $all_roles));
@@ -179,15 +179,18 @@ function webform_registration_submit($form, &$form_state) {
   }
 
   watchdog('webform_registration', 'Webform Registration: Registration Triggered');
-
+  
+  $admin = user_access('administer users');
+  
   $user_register_info = array(
     'values' => array(
       'mail' => $fields['mail']['value'],
-      'name' => $fields['name']['value'],
+      'name' => ($fields['name']['value'] != '' ? $fields['name']['value'] : $fields['mail']['value']),
       'notify' => 0,
       'status' => $settings['status'],
       'pass' => ($fields['pass']['key'] != '<auto>' ? $fields['pass']['value'] : user_password()),
       'roles' => $settings['roles'],
+      'administer_users' => $admin,
     ),
     'buttons' => array(),
   );
@@ -208,6 +211,29 @@ function webform_registration_submit($form, &$form_state) {
       'uid' => $user_register_info['values']['uid'],
     ))
     ->condition('sid', $form_state['values']['details']['sid'])
+    ->execute();
+    
+  // Redact the passwords.
+  $password_field_key = $form['#node']->webform_registration['pass'];
+  $confirm_password_field_key = $form['#node']->webform_registration['pass_confirm'];
+
+  $components = $form['#node']->webform['components'];
+
+  foreach($components as $each_component) {
+    if ($each_component['form_key'] == $password_field_key) {
+      $password_field_cid = $each_component['cid'];
+    }
+    elseif ($each_component['form_key'] == $confirm_password_field_key) {
+      $confirm_password_field_cid = $each_component['cid'];
+    }
+  }
+
+  db_update('webform_submitted_data')
+    ->fields(array(
+      'data' => '[REDACTED]',
+    ))
+    ->condition('sid', $form_state['values']['details']['sid'])
+    ->condition('cid', array($password_field_cid, $confirm_password_field_cid), 'IN')
     ->execute();
 }
 

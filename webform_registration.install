@@ -87,12 +87,6 @@ function webform_registration_schema() {
   return $schema;
 }
 
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function webform_registration_update_7101() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function webform_registration_update_7103() { }
-
 /**
  * Implements hook_update_last_removed().
  */
@@ -102,9 +96,47 @@ function webform_registration_update_last_removed() {
 
 /**
  * Implements hook_update_N().
+ * 
+ * Redact any passwords from webform registration tables.
  */
-function webform_registration_update_1000() {
+
+function webform_registration_update_1000(&$sandbox) {
   $config = config('webform_registration.settings');
+
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['current_nid'] = 0;
+    $sandbox['max'] = db_query("SELECT count(*) FROM webform_registration WHERE pass != '<auto>' OR pass_confirm != '<none>'")->fetchField();
+  }
+
+  if (empty($sandbox['max'])) {
+    $sandbox['#finished'] = 1;
+    return t('No passwords to update.');
+  }
+
+  $query = "SELECT wr.nid, wc_pass.cid as pass_cid, wc_confirm.cid as confirm_cid FROM webform_registration wr
+    LEFT JOIN webform_component wc_pass ON wc_pass.form_key = wr.pass
+    LEFT JOIN webform_component wc_confirm ON wc_confirm.form_key = wr.pass_confirm
+    WHERE (pass != '<auto>' OR pass_confirm != '<none>') AND wr.nid > :nid
+    ORDER BY nid ASC
+    LIMIT 3";
+  $webforms = db_query($query, array(':nid' => $sandbox['current_nid']));
+
+  foreach ($webforms as $webform) {
+    $sandbox['current_nid'] = $webform->nid;
+    db_query("UPDATE webform_submitted_data
+      SET data = '[REDACTED]'
+      WHERE nid = :nid
+        AND cid IN (:cids)", array(
+          ':nid' => $webform->nid, 
+          ':cids' => array($webform->pass_cid, $webform->confirm_cid)));
+    $sandbox['progress']++;
+  }
+  $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
+  if ($sandbox['#finished'] >= 1) {
+    return t('Password update complete.');
+  }
+  return t('Updated !n of !max passwords.', array('!n' => $sandbox['progress'], '!max' => $sandbox['max']));
 }
 
 /**

@@ -192,11 +192,11 @@ function webform_registration_settings_form($form, $form_state, $node) {
       ),
     ),
   );
-  foreach ($roles as $rid => $role) {
-    $form['webform_registration']['roles'][$rid] = array(
+  foreach ($roles as $rolename => $rolelabel) {
+    $form['webform_registration']['roles'][$rolename] = array(
       '#type' => 'checkbox',
-      '#title' => check_plain($role),
-      '#default_value' => (isset($form_settings['roles'][$rid]) ? TRUE : FALSE),
+      '#title' => check_plain($rolelabel),
+      '#default_value' => (isset($form_settings['roles'][$rolename]) ? TRUE : FALSE),
       '#states' => array(
         'invisible' => array(
          'input[name="webform_registration[enabled]"]' => array('checked' => FALSE),
@@ -204,9 +204,9 @@ function webform_registration_settings_form($form, $form_state, $node) {
       ),
     );
     // They're always authenticated users.
-    if ($rid == 2) {
-      $form['webform_registration']['roles'][$rid]['#default_value'] = TRUE;
-      $form['webform_registration']['roles'][$rid]['#disabled'] = TRUE;
+    if ($rolename == 'authenticated') {
+      $form['webform_registration']['roles'][$rolename]['#default_value'] = TRUE;
+      $form['webform_registration']['roles'][$rolename]['#disabled'] = TRUE;
     }
   }
 
@@ -267,9 +267,9 @@ function webform_registration_settings_form_submit($form, &$form_state) {
     $form_values['account_fields'] = serialize($form_values['account_fields']);
   }
   // Store only required roles.
-  foreach ($form_values['roles'] as $rid => $selected) {
+  foreach ($form_values['roles'] as $role => $selected) {
     if (!$selected) {
-      unset($form_values['roles'][$rid]);
+      unset($form_values['roles'][$role]);
     }
   }
   $form_values['roles'] = serialize($form_values['roles']);
