@@ -135,12 +135,11 @@ function webform_registration_settings_form($form, $form_state, $node) {
       ),
     ),
   );
-
   // Default status
   $form['webform_registration']['status'] = array(
     '#type' => 'radios',
     '#title' => t('Default status'),
-    '#default_value' => empty($form_settings['status']) ? 1 : $form_settings['status'],
+    '#default_value' => (!isset($form_settings['status']) || $form_settings['status']) ? 1 : $form_settings['status'],
     '#options' => array(1 => 'Active', 0 => 'Blocked'),
     '#description' => t('Select the default status for users created through webform registration'),
     '#states' => array(
