@@ -203,6 +203,7 @@ function webform_registration_submit($form, &$form_state) {
     }
   }
 
+  $form['#user'] = entity_create('user', array());
   user_register_submit($form, $user_register_info);
 
   // Update the main submission info.
@@ -214,6 +215,7 @@ function webform_registration_submit($form, &$form_state) {
     ->execute();
     
   // Redact the passwords.
+  $password_field_cid = $confirm_password_field_cid = NULL;
   $password_field_key = $form['#node']->webform_registration['pass'];
   $confirm_password_field_key = $form['#node']->webform_registration['pass_confirm'];
 

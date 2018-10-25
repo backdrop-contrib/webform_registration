@@ -83,36 +83,3 @@ function webform_registration_node_load($nodes, $types) {
     }
   }
 }
-
-/**
- * Implements $modulename_preprocess_$hook().
- */
-function webform_registration_preprocess_page(&$variables) {
-  //If we are on a node page.
-  if (isset($variables['node'])) {
-    $node = $variables['node'];
-    if ($node->type == 'webform' && $node->webform_registration['theme_override']) {
-      // Add suggestions: a node specific and a generic page-registration.tpl.php
-      $variables['template_files'][] = 'page-registration';
-      $variables['template_files'][] = 'page-registration-' . $node->nid;
-    }
-  }
-}
-
-/**
- * Implements hook_theme().
- */
- /*
-function webform_registration_theme($existing, $type, $theme, $path) {
-  return array(
-    'page' => array(
-      'template' => 'page-registration',
-      'arguments' => array(
-        'content' => NULL,
-        'show_blocks' => TRUE,
-        'show_messages' => TRUE,
-      ),
-    ),
-  );
-}
-*/
