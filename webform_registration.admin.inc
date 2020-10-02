@@ -52,22 +52,14 @@ function webform_registration_settings_form($form, $form_state, $node) {
 
   // We do have components in this form, so let's process them into select options.
   $options = array();
-  $fieldset = array(); // Holds form_key references to map pid to fieldset cids.
   $auto = array('<auto>' => t('Generate field automatically'));
   $none = array('<none>' => t('Omit field'));
 
   foreach ($components as $component) {
     // Available options are nid, cid, form_key, name, type, value, extra,
     // mandatory, email, pid, weight, page_num
-    if ($component['type'] == 'fieldset') {
-      $fieldset[$component['cid']] = array('name' => $component['name'], 'form_key' => $component['form_key']);
-      $options[$component['name']] = array();
-    }
-    elseif ($component['pid'] != 0) {
-      $options[$fieldset[$component['pid']]['name']][$fieldset[$component['pid']]['form_key'] . '][' . $component['form_key']] = $component['name'];
-    }
-    else {
-      $options[$component['form_key']] = $component['name'];
+    if ($component['type'] != 'fieldset') {
+      $options[$component['cid']] = $component['name'];
     }
   }
 
