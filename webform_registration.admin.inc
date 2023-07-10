@@ -281,6 +281,7 @@ function webform_registration_settings_form_submit($form, &$form_state) {
   else {
     $result = backdrop_write_record('webform_registration', $form_values, 'nid');
   }
+  entity_get_controller('node')->resetCache(array($form_state['values']['node']->nid));
   backdrop_set_message(t('The registration settings have been updated.'));
   return $result;
 }
