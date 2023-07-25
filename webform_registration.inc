@@ -200,7 +200,7 @@ function webform_registration_submit($form, &$form_state) {
   //Add use field instances
   $user_field_info_instances = field_info_instances('user', 'user');
   foreach ($user_field_info_instances as $field_name => $instance) {
-    if (!in_array($fields[$field_name]['value'], _webform_registration_get_special_needles())) {
+    if (isset($fields[$field_name]) && !in_array($fields[$field_name]['value'], _webform_registration_get_special_needles())) {
       $user_register_info['values'][$field_name]['und'][0]['value'] = $fields[$field_name]['value'];
     }
   }
