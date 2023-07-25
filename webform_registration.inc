@@ -57,8 +57,10 @@ function webform_registration_inc_form_alter(&$form, &$form_state, $form_id) {
 
     if (is_array($settings['account_fields'])) {
       foreach ($settings['account_fields'] as $account_field => $field) {
-        $fields[$account_field]['field']['#attributes'] = array('readonly' => 'readonly');
-        $fields[$account_field]['field']['#value'] = $user_data->{$account_field}['und'][0]['value'];
+        if (isset($user_data->{$account_field}['und'][0]['value'])) {
+          $fields[$account_field]['field']['#attributes'] = array('readonly' => 'readonly');
+          $fields[$account_field]['field']['#value'] = $user_data->{$account_field}['und'][0]['value'];
+        }
       }
     }
 
